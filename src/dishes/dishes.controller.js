@@ -43,7 +43,7 @@ function read(req, res) {
 
 function dishExists(req, res, next) {
   const { dishId } = req.params;
-  const foundDish = dishes.find((dish) => dish.id === Number(dishId));
+  const foundDish = dishes.find((dish) => dish.id === dishId);
   if (foundDish) {
     res.locals.dish = foundDish;
     return next();
@@ -59,7 +59,7 @@ function pricePropertyIsValid(req, res, next) {
   if (price <= 0 || !Number.isInteger(price)) {
     return next({
       status: 400,
-      message: `Price requires a valid number`,
+      message: `price`,
     });
   }
   next();
