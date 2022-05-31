@@ -11,6 +11,8 @@ function list(req, res) {
   res.json({ data: res.locals.dish });
 }
 
+let lastDishId = dishes.reduce((maxId, dish) => Math.max(maxId, dish.id), 0);
+
 function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
