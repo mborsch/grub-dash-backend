@@ -7,21 +7,21 @@ const dishes = require(path.resolve("src/data/dishes-data"));
 const nextId = require("../utils/nextId");
 
 // TODO: Implement the /dishes handlers needed to make the tests pass
-function list(req, res){
-    res.json({ data: res.locals.dish });
+function list(req, res) {
+  res.json({ data: res.locals.dish });
 }
 
-function bodyDataHas(propertyName){
-    function (req, res, next){
-        const { data = {} } = req.body;
-        if(data[propertyName]){
-            return next();
-        }
-        next({
-            status: 400,
-            message: `Must include a ${propertyName}.`,
-        })
+function bodyDataHas(propertyName) {
+  return function (req, res, next) {
+    const { data = {} } = req.body;
+    if (data[propertyName]) {
+      return next();
     }
+    next({
+      status: 400,
+      message: `Must include a ${propertyName}.`,
+    });
+  };
 }
 
 module.exports = {
@@ -29,4 +29,4 @@ module.exports = {
   read: [],
   list,
   update: [],
-}
+};
