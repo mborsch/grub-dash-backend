@@ -11,6 +11,7 @@ function list(req, res) {
   res.json({ data: orders });
 }
 
+//checks that each property variable is included
 function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
@@ -24,6 +25,7 @@ function bodyDataHas(propertyName) {
   };
 }
 
+//checks if dishes is an array
 function isArray(req, res, next) {
   const { data: { dishes } = {} } = req.body;
   if (Array.isArray(dishes)) {
@@ -35,6 +37,7 @@ function isArray(req, res, next) {
   });
 }
 
+//checks if order exists
 function orderExists(req, res, next) {
   const { orderId } = req.params;
   const foundOrder = orders.find((order) => order.id === orderId);
@@ -48,10 +51,12 @@ function orderExists(req, res, next) {
   });
 }
 
+//reads order
 function read(req, res, next) {
   res.json({ data: res.locals.order });
 }
 
+//creates a new order
 function create(req, res) {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
   const newOrder = {
@@ -65,6 +70,7 @@ function create(req, res) {
   res.status(201).json({ data: newOrder });
 }
 
+//validates that status syntax is one of the accepted strings
 function statusSyntaxValidation(req, res, next) {
   const { data: { status } = {} } = req.body;
   const validStatus = ["pending", "preparing", "out-for-delivery", "delivered"];
@@ -77,6 +83,7 @@ function statusSyntaxValidation(req, res, next) {
   });
 }
 
+//checks if order status is delivered
 function isDelivered(req, res, next) {
   const { data: { status } = {} } = req.body;
   if (status === "delivered") {
@@ -88,6 +95,7 @@ function isDelivered(req, res, next) {
   next();
 }
 
+//checks if dishes is an array, empty, or missing, also checks if dish quantity is an integer, undefined, or missing
 function dishValidator(req, res, next) {
   const { data: { dishes } = {} } = req.body;
 
@@ -126,9 +134,9 @@ function dishValidator(req, res, next) {
   next();
 }
 
+//checks that both ids match
 function idMatch(req, res, next) {
   const { orderId } = req.params;
-
   const { data: { id } = {} } = req.body;
   if (!id) {
     return next();
@@ -143,6 +151,7 @@ function idMatch(req, res, next) {
   });
 }
 
+//updates an existing order without changing id
 function update(req, res) {
   const order = res.locals.order;
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
@@ -155,6 +164,7 @@ function update(req, res) {
   res.json({ data: order });
 }
 
+//deletes an existing order, so long as order status is pending
 function destroy(req, res, next) {
   const order = res.locals.order;
   const { orderId } = req.params;
@@ -183,7 +193,6 @@ module.exports = {
   ],
   update: [
     orderExists,
-
     bodyDataHas("mobileNumber"),
     bodyDataHas("status"),
     bodyDataHas("dishes"),
@@ -192,7 +201,6 @@ module.exports = {
     statusSyntaxValidation,
     isDelivered,
     idMatch,
-
     update,
   ],
   orderExists,

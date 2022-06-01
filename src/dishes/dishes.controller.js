@@ -11,6 +11,7 @@ function list(req, res) {
   res.json({ data: dishes });
 }
 
+//checks that each property variable is included
 function bodyDataHas(propertyName) {
   return function (req, res, next) {
     const { data = {} } = req.body;
@@ -24,6 +25,7 @@ function bodyDataHas(propertyName) {
   };
 }
 
+//checks if property variable is empty
 function isBodyEmpty(propertyname) {
   return function (req, res, next) {
     const { data = {} } = req.body;
@@ -41,6 +43,7 @@ function read(req, res) {
   res.json({ data: res.locals.dish });
 }
 
+//checks if dish exists
 function dishExists(req, res, next) {
   const { dishId } = req.params;
   const foundDish = dishes.find((dish) => dish.id === dishId);
@@ -54,6 +57,7 @@ function dishExists(req, res, next) {
   });
 }
 
+//ensures price property is a number and greater than 0
 function pricePropertyIsValid(req, res, next) {
   const { data: { price } = {} } = req.body;
   if (price <= 0 || !Number.isInteger(price)) {
@@ -65,6 +69,7 @@ function pricePropertyIsValid(req, res, next) {
   next();
 }
 
+//checks that both id's match
 function idMatch(req, res, next) {
   const { dishId } = req.params;
   const { data: { id } = {} } = req.body;
@@ -80,6 +85,7 @@ function idMatch(req, res, next) {
   });
 }
 
+//creates a new dish
 function create(req, res) {
   const { data: { name, description, price, image_url } = {} } = req.body;
   const newDish = {
@@ -93,6 +99,7 @@ function create(req, res) {
   res.status(201).json({ data: newDish });
 }
 
+//updates an existing dish without updating id
 function update(req, res) {
   const dish = res.locals.dish;
   const { data: { name, description, price, image_url } = {} } = req.body;
