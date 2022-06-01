@@ -24,6 +24,17 @@ function bodyDataHas(propertyName) {
   };
 }
 
+function isArray(req, res, next) {
+  const { data: { dishes } = {} } = req.body;
+  if (Array.isArray(dishes)) {
+    return next();
+  }
+  next({
+    status: 400,
+    message: `dishes must be an array`,
+  });
+}
+
 function orderExists(req, res, next) {
   const { orderId } = req.params;
   const foundOrder = orders.find((order) => order.id === orderId);
@@ -62,20 +73,8 @@ function statusSyntaxValidation(req, res, next) {
   }
   next({
     status: 400,
-    message: `Price requires a valid number`,
+    message: `status requires a valid syntax`,
   });
-}
-
-function orderIdMatch(req, res, next) {
-  const { orderId } = req.params;
-  const { data: { id } = {} } = req.body;
-  if (orderId !== id) {
-    return next({
-      status: 400,
-      message: `id not found: ${orderId}`,
-    });
-  }
-  next();
 }
 
 function isDelivered(req, res, next) {
@@ -89,15 +88,59 @@ function isDelivered(req, res, next) {
   next();
 }
 
-function isPending(req, res, next) {
-  const { data: { status } = {} } = req.body;
-  if (status !== "pending") {
+function dishValidator(req, res, next) {
+  const { data: { dishes } = {} } = req.body;
+
+  if (!Array.isArray(dishes)) {
     return next({
       status: 400,
-      message: `pending`,
+      message: `dish must be array: ${dishes}`,
     });
   }
+  if (dishes == [] || dishes == "") {
+    return next({
+      status: 400,
+      message: `dish cannot be empty ${dishes}`,
+    });
+  }
+  dishes.forEach((dish, index) => {
+    if (!dish.quantity) {
+      return next({
+        status: 400,
+        message: `quantity: ${index} ${dish.quantity}`,
+      });
+    }
+    if (dish.quantity === undefined) {
+      return next({
+        status: 400,
+        message: `quantity is undefined: ${dish.quantity}`,
+      });
+    }
+    if (!Number.isFinite(dish.quantity)) {
+      return next({
+        status: 400,
+        message: `quantity is not an integer: ${index} ${dish.quantity}`,
+      });
+    }
+  });
   next();
+}
+
+function idMatch(req, res, next) {
+  const { orderId } = req.params;
+
+  const { data: { id } = {} } = req.body;
+  if (!id) {
+    return next();
+  }
+  if (orderId === id) {
+    return next();
+  }
+
+  next({
+    status: 400,
+    message: `orderId: ${orderId} does not match id: ${id}`,
+  });
 }
 
 function update(req, res) {
@@ -112,30 +155,46 @@ function update(req, res) {
   res.json({ data: order });
 }
 
-function destroy(req, res) {
+function destroy(req, res, next) {
+  const order = res.locals.order;
   const { orderId } = req.params;
-  const index = orders.findIndex(order);
+  const index = orders.findIndex((order) => order.id === orderId);
+  if (index > -1 && order.status === "pending") {
+    orders.splice(index, 1);
+  } else {
+    return next({
+      status: 400,
+      message: "An order cannot be deleted unless it is pending",
+    });
+  }
+  res.sendStatus(204);
 }
 
 module.exports = {
   list,
   read: [orderExists, read],
   create: [
+    dishValidator,
     bodyDataHas("deliverTo"),
     bodyDataHas("mobileNumber"),
     bodyDataHas("dishes"),
-
+    isArray,
     create,
   ],
   update: [
+    orderExists,
+
     bodyDataHas("mobileNumber"),
     bodyDataHas("status"),
     bodyDataHas("dishes"),
+    bodyDataHas("deliverTo"),
+    dishValidator,
     statusSyntaxValidation,
     isDelivered,
-    orderIdMatch,
+    idMatch,
+
     update,
   ],
   orderExists,
-  delete: [orderExists, isPending, destroy],
+  delete: [orderExists, destroy],
 };
