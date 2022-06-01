@@ -44,7 +44,7 @@ function read(req, res, next) {
 function create(req, res) {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
   const newOrder = {
-    id: nextId,
+    id: nextId(),
     deliverTo,
     mobileNumber,
     status,
@@ -89,6 +89,17 @@ function isDelivered(req, res, next) {
   next();
 }
 
+function isPending(req, res, next) {
+  const { data: { status } = {} } = req.body;
+  if (status !== "pending") {
+    return next({
+      status: 400,
+      message: `pending`,
+    });
+  }
+  next();
+}
+
 function update(req, res) {
   const order = res.locals.order;
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
@@ -126,5 +137,5 @@ module.exports = {
     update,
   ],
   orderExists,
-  delete: [orderExists, destroy],
+  delete: [orderExists, isPending, destroy],
 };

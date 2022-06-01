@@ -8,7 +8,7 @@ const nextId = require("../utils/nextId");
 
 // TODO: Implement the /dishes handlers needed to make the tests pass
 function list(req, res) {
-  res.json({ data: res.locals.dish });
+  res.json({ data: dishes });
 }
 
 function bodyDataHas(propertyName) {
@@ -65,10 +65,25 @@ function pricePropertyIsValid(req, res, next) {
   next();
 }
 
+function idMatch(req, res, next) {
+  const { dishId } = req.params;
+  const { data: { id } = {} } = req.body;
+  if (!id) {
+    next();
+  }
+  if (dishId === id) {
+    next();
+  }
+  next({
+    status: 400,
+    message: `dishId: ${dishId} does not match id: ${id}`,
+  });
+}
+
 function create(req, res) {
   const { data: { name, description, price, image_url } = {} } = req.body;
   const newDish = {
-    id: nextId,
+    id: nextId(),
     name,
     description,
     price,
@@ -91,6 +106,7 @@ function update(req, res) {
 }
 
 module.exports = {
+  list,
   create: [
     bodyDataHas("name"),
     bodyDataHas("description"),
@@ -103,7 +119,7 @@ module.exports = {
     create,
   ],
   read: [dishExists, read],
-  list,
+
   update: [
     dishExists,
     bodyDataHas("name"),
@@ -114,6 +130,7 @@ module.exports = {
     isBodyEmpty("name"),
     isBodyEmpty("description"),
     isBodyEmpty("image_url"),
+    idMatch,
     update,
   ],
 };
