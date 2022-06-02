@@ -11,32 +11,40 @@ function list(req, res) {
   res.json({ data: dishes });
 }
 
-//checks that each property variable is included
-function bodyDataHas(propertyName) {
-  return function (req, res, next) {
-    const { data = {} } = req.body;
-    if (data[propertyName]) {
-      return next();
-    }
-    next({
-      status: 400,
-      message: `Must include a ${propertyName}.`,
-    });
-  };
+//checks if name property is included or empty
+function namePropertyValidator(req, res, next) {
+  const { data: { name } = {} } = req.body;
+  if (name && name !== "") {
+    return next();
+  }
+  next({
+    status: 400,
+    message: `Must include a name property: ${name}`,
+  });
 }
 
-//checks if property variable is empty
-function isBodyEmpty(propertyname) {
-  return function (req, res, next) {
-    const { data = {} } = req.body;
-    if (data[propertyname] === "") {
-      return next({
-        status: 400,
-        message: `${propertyname} can't be empty.`,
-      });
-    }
-    next();
-  };
+//checks if description is included or empty
+function descriptionPropertyValidator(req, res, next) {
+  const { data: { description } = {} } = req.body;
+  if (description && description !== "") {
+    return next();
+  }
+  next({
+    status: 400,
+    message: `Must include a description property: ${description}`,
+  });
+}
+
+//checks if image_url is included or empty
+function image_urlPropertyValidator(req, res, next) {
+  const { data: { image_url } = {} } = req.body;
+  if (image_url && image_url !== "") {
+    return next();
+  }
+  next({
+    status: 400,
+    message: `Must include a image_url property: ${image_url}`,
+  });
 }
 
 function read(req, res) {
@@ -115,28 +123,20 @@ function update(req, res) {
 module.exports = {
   list,
   create: [
-    bodyDataHas("name"),
-    bodyDataHas("description"),
-    bodyDataHas("price"),
-    bodyDataHas("image_url"),
     pricePropertyIsValid,
-    isBodyEmpty("name"),
-    isBodyEmpty("description"),
-    isBodyEmpty("image_url"),
+    namePropertyValidator,
+    descriptionPropertyValidator,
+    image_urlPropertyValidator,
     create,
   ],
   read: [dishExists, read],
 
   update: [
     dishExists,
-    bodyDataHas("name"),
-    bodyDataHas("description"),
-    bodyDataHas("price"),
-    bodyDataHas("image_url"),
     pricePropertyIsValid,
-    isBodyEmpty("name"),
-    isBodyEmpty("description"),
-    isBodyEmpty("image_url"),
+    namePropertyValidator,
+    descriptionPropertyValidator,
+    image_urlPropertyValidator,
     idMatch,
     update,
   ],
